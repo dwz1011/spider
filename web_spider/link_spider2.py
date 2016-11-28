@@ -43,9 +43,10 @@ class Throttle:
 				time.sleep(sleep_secs)
 		self.domains[domain] = datetime.now()
 		
-def link_spider(seed_url, link_regex, delay=0):
+def link_spider(seed_url, link_regex, delay=0, max_depth=2):
+	max_depth = 2
+	seen = {seed_url: 0}
 	crawl_queue = [seed_url]
-	seen = set(crawl_queue)
 	rp = robotparser.RobotFileParser()
 	throttle = Throttle(delay)
 	rp.set_url(urlparse.urljoin(seed_url, '/rocot.txt'))
@@ -56,12 +57,14 @@ def link_spider(seed_url, link_regex, delay=0):
 		if rp.can_fetch(user_agent, seed_url):
 			throttle.wait(url)
 			html = download(url)
-			for link in get_links(html):
-				if re.match(link_regex, link):
-					link = urlparse.urljoin(seed_url,link)
-					if link not in seen:
-						seen.add(link)
-						crawl_queue.append(link)
+			depth = seen[url]
+			if depth != max_depth:
+				for link in get_links(html):
+					if re.match(link_regex, link):
+						link = urlparse.urljoin(seed_url,link)
+						if link not in seen:
+							seen[link] = depth + 1
+							crawl_queue.append(link)
 		else:
 			print 'Blocked by robots.txt', url
 
