@@ -2,6 +2,7 @@
 
 from common import *
 import re
+import urlparse
 
 def get_links(html):
 	reg = re.compile('<a[^>]+href=["\'](.*?)["\']', re.IGNORECASE)
@@ -14,6 +15,7 @@ def link_spider(seed_url, link_regex):
 		html = download(url)
 		for link in get_links(html):
 			if re.match(link_regex, link):
+				link = urlparse.urljoin(seed_url,link)
 				crawl_queue.append(link)
 
 if __name__ == '__main__':
