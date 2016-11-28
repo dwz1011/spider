@@ -16,7 +16,7 @@ def download(url, num_retries=2, user_agent='wswp'):
 	return html
 
 
-if __name__ == '__main__':
-	url = 'http://example.webscraping.com'
-	# url = 'http://httpstat.us/500'
-	print download(url)
+# if __name__ == '__main__':
+# 	url = 'http://example.webscraping.com'
+# 	# url = 'http://httpstat.us/500'
+# 	print download(url)
