@@ -5,31 +5,49 @@ import re
 import urlparse
 import robotparser
 from datetime import datetime
+import Queue
+
+def download(url, headers, proxy, num_retries, data=None):
+    print 'Downloading:', url
+    request = urllib2.Request(url, data, headers)
+    opener = urllib2.build_opener()
+    if proxy:
+        proxy_params = {urlparse.urlparse(url).scheme: proxy}
+        opener.add_handler(urllib2.ProxyHandler(proxy_params))
+    try:
+        response = opener.open(request)
+        html = response.read()
+        code = response.code
+    except urllib2.URLError as e:
+        print 'Download error:', e.reason
+        html = ''
+        if hasattr(e, 'code'):
+            code = e.code
+            if num_retries > 0 and 500 <= code < 600:
+                return download(url, headers, proxy, num_retries-1, data)
+        else:
+            code = None
+    return html
+
+def normalize(seed_url, link):
+    link, _ = urlparse.urldefrag(link) 
+    return urlparse.urljoin(seed_url, link)
+
+def same_domain(url1, url2):
+    return urlparse.urlparse(url1).netloc == urlparse.urlparse(url2).netloc
 
 def get_links(html):
 	reg = re.compile('<a[^>]+href=["\'](.*?)["\']', re.IGNORECASE)
 	return reg.findall(html)
 
-def download(url, num_retries=2, proxy=None, user_agent='wswp'):
-	print 'downloading:', url
-	headers = {'User-agent': user_agent}
-	request = urllib2.Request(url, headers=headers)
-	opener = urllib2.build_opener()
-	if proxy:
-		proxy_params = {urlparse.urlparse(url).scheme: proxy}
-		opener.add_handler(urllib2.ProxyHandler(proxy_params))
-	try:
-		html = opener.open(request).read()
-	except urllib2.URLError as e:
-		print 'Downloading error:', e.reason
-		html = None
-		if num_retries > 0:
-			if hasattr(e, 'code') and 500 <= e.code <= 600:
-				return download(url, num_retries-1, proxy, user_agent)
-	return html
+
+def get_robots(url):
+    rp = robotparser.RobotFileParser()
+    rp.set_url(urlparse.urljoin(url, '/robots.txt'))
+    rp.read()
+    return rp
 
 class Throttle:
-	"""docstring for Throttle"""
 	def __init__(self, delay):
 		self.delay = delay
 		self.domains = {}
@@ -42,31 +60,37 @@ class Throttle:
 			if sleep_secs > 0:
 				time.sleep(sleep_secs)
 		self.domains[domain] = datetime.now()
-		
-def link_spider(seed_url, link_regex, delay=0, max_depth=2):
-	max_depth = 2
-	seen = {seed_url: 0}
-	crawl_queue = [seed_url]
-	rp = robotparser.RobotFileParser()
-	throttle = Throttle(delay)
-	rp.set_url(urlparse.urljoin(seed_url, '/rocot.txt'))
-	rp.read()
-	user_agent = 'GoodCrawler'
-	while crawl_queue:
-		url = crawl_queue.pop()
-		if rp.can_fetch(user_agent, seed_url):
-			throttle.wait(url)
-			html = download(url)
-			depth = seen[url]
-			if depth != max_depth:
-				for link in get_links(html):
-					if re.match(link_regex, link):
-						link = urlparse.urljoin(seed_url,link)
-						if link not in seen:
-							seen[link] = depth + 1
-							crawl_queue.append(link)
-		else:
-			print 'Blocked by robots.txt', url
+
+def link_spider(seed_url, link_regex=None, delay=5, max_depth=-1, max_urls=-1, headers=None, user_agent='wswp', proxy=None, num_retries=1):
+    crawl_queue = Queue.deque([seed_url])
+    seen = {seed_url: 0}
+    num_urls = 0
+    rp = get_robots(seed_url)
+    throttle = Throttle(delay)
+    headers = headers or {}
+    if user_agent:
+        headers['User-agent'] = user_agent
+    while crawl_queue:
+        url = crawl_queue.pop()
+        if rp.can_fetch(user_agent, url):
+            throttle.wait(url)
+            html = download(url, headers, proxy=proxy, num_retries=num_retries)
+            links = []
+            depth = seen[url]
+            if depth != max_depth:
+                if link_regex:
+                    links.extend(link for link in get_links(html) if re.match(link_regex, link))
+                for link in links:
+                    link = normalize(seed_url, link)
+                    if link not in seen:
+                        seen[link] = depth + 1
+                        if same_domain(seed_url, link):
+                            crawl_queue.append(link)
+            num_urls += 1
+            if num_urls == max_urls:
+                break
+        else:
+            print 'Blocked by robots.txt:', url
 
 if __name__ == '__main__':
-    link_spider('http://example.webscraping.com', '/(index|view)')
+    link_spider('http://example.webscraping.com', '/(index|view)', delay=0, num_retries=1, max_depth=1, user_agent='GoodCrawler')
