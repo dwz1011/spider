@@ -95,5 +95,10 @@
 		loads(string) 返回包含在 pickle 字符串中的对象； 
 		dump(object, file) 将对象写到文件，这个对象具有write()方法;
 		load(file) 返回包含在 pickle 文件中的对象。
+		
+3.zlib模块
+
+	zlib.compress(string[, level])用于压缩流数据
+	zlib.decompress(string[, wbits[, bufsize]])用于解压数据
 	
-- 数据库缓存
+**数据库缓存**
