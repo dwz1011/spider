@@ -70,3 +70,21 @@
 	|    正则表达式   |   快   |   困难   | 简单(内置模块)  |
 	| BeautifulSoup |   慢   |   简单   | 简单(纯python) |
 	|      Lxml     |   快   |   简单   |     相对困难    |
+	
+###下载缓存(download_cache)
+
+**支持缓存**
+
+**磁盘缓存**
+
+1.urlparse.urlsplit() 将URL分割成几个部分
+
+	例：
+	>>> import urlparse
+	>>> c = urlparse.urlsplit('http://example.webscraping.com/index/')
+	>>> print c
+	SplitResult(scheme='http', netloc='example.webscraping.com', path='/index/', query='', fragment='')
+	>>> print c.path
+	/index/
+	
+- 数据库缓存
