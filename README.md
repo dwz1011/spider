@@ -77,8 +77,9 @@
 
 **磁盘缓存**
 
-1.urlparse.urlsplit() 将URL分割成几个部分
+1.urlparse模块
 
+	urlparse.urlsplit()	--将URL分割成几个部分
 	例：
 	>>> import urlparse
 	>>> c = urlparse.urlsplit('http://example.webscraping.com/index/')
@@ -86,5 +87,13 @@
 	SplitResult(scheme='http', netloc='example.webscraping.com', path='/index/', query='', fragment='')
 	>>> print c.path
 	/index/
+	
+2.pickle模块
+
+	pickle 模块提供了以下函数对： 
+		dumps(object) 返回一个字符串，它包含一个pickle格式的对象； 
+		loads(string) 返回包含在 pickle 字符串中的对象； 
+		dump(object, file) 将对象写到文件，这个对象具有write()方法;
+		load(file) 返回包含在 pickle 文件中的对象。
 	
 - 数据库缓存
