@@ -1,5 +1,5 @@
-#网络爬虫
-###了解网络爬虫
+# 网络爬虫
+### 了解网络爬虫
 
 **检查robots.txt**
 
@@ -53,7 +53,7 @@
 	
 	> 避免爬虫陷阱
 	
-###数据抓取(data_spider)
+### 数据抓取(data_spider)
 
 - 抓取网页的三种方法
 
@@ -71,7 +71,7 @@
 	| BeautifulSoup |   慢   |   简单   | 简单(纯python) |
 	|      Lxml     |   快   |   简单   |     相对困难    |
 	
-###下载缓存(download_cache)
+### 下载缓存(download_cache)
 
 **支持缓存**
 
